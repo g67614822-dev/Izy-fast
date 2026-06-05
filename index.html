@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Izy Fast - Free Fire</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@500;600;700&display=swap');
+        :root {
+            --red: #ff0844; 
+            --red-glow: #ff0844aa;
+            --blue: #00d4ff; 
+            --blue-glow: #00d4ff66;
+            --purple: #a020f0;
+            --green: #00ff88; 
+            --green-glow: #00ff8866;
+            --bg-dark: #0a0e27;
+            --bg-card: #141b3d;
+            --bg-glass: rgba(20, 27, 61, 0.75);
+            --text: #e4e6ff; 
+            --text-dim: #8b92b9;
+            --shadow-neon: 0 0 20px var(--blue-glow);
+            --shadow-red: 0 0 20px var(--red-glow);
+            --border-glow: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(160, 32, 240, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 8, 68, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(0, 212, 255, 0.1) 0%, transparent 50%);
+            color: var(--text); 
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(0,212,255,0.03)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            pointer-events: none;
+            z-index: 0;
+            animation: gridMove 20s linear infinite;
+        }
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(10px, 10px); }
+        }
+        .page { display: none; position: relative; z-index: 1; }
+        .page.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 15px var(--blue-glow); }
+            50% { box-shadow: 0 0 30px var(--blue-glow), 0 0 45px var(--blue-glow); }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-3deg); }
+            75% { transform: rotate(3deg); }
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        #notification-box {
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--bg-card), #1a2147);
+            color: var(--green); padding: 16px 28px;
+            border-radius: 12px; font-weight: 700; z-index: 3000;
+            transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: var(--shadow-neon), inset 0 1px 0 rgba(255,255,255,0.1);
+            width: 90%; max-width: 400px; text-align: center;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--green-glow);
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(10,14,39,0.95) 0%, rgba(20,27,61,0.95) 100%);
+            position: sticky; top: 0; z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,212,255,0.1);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid transparent;
+            border-image: linear-gradient(90deg, transparent, var(--blue), transparent) 1;
+        }
+        .logo-img { 
+            width: 45px; height: 45px; border-radius: 10px; 
+            border: 2px solid var(--blue); 
+            box-shadow: 0 0 15px var(--blue-glow), inset 0 0 10px rgba(0,212,255,0.2);
+            object-fit: cover;
+            animation: pulseGlow 3s infinite, float 3s ease-in-out infinite;
+        }
+        .site-title { 
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900; 
+            color: #fff; 
+            font-size: 1.2rem; 
+            letter-spacing: 3px; 
+            text-shadow: 0 0 10px var(--blue-glow), 0 0 20px var(--blue-glow);
+            animation: float 4s ease-in-out infinite;
+        }
+        .hist-btn { 
+            color: var(--blue); 
+            font-size: 1.4rem; 
+            cursor: pointer; 
+            transition: 0.3s; 
+            filter: drop-shadow(0 0 8px var(--blue-glow));
+            animation: float 2.5s ease-in-out infinite;
+        }
+        .hist-btn:active { transform: rotate(180deg) scale(1.2); }
+        .hist-btn:hover { color: #fff; animation: wiggle 0.5s ease-in-out; }
+        
+        .banner-gif { 
+            width: 92%; margin: 20px auto; border-radius: 20px; overflow: hidden; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5), var(--shadow-neon); 
+            border: 2px solid var(--blue); 
+            transition: 0.4s;
+            position: relative;
+            animation: bounceIn 0.6s ease-out;
+        }
+        .banner-gif::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,212,255,0.3), transparent);
+            animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        .banner-gif:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 15px 50px rgba(0,0,0,0.7), 0 0 40px var(--blue-glow); }
+        .banner-gif img { width: 100%; display: block; }
+        
+        #login-section,.white-card,.pay-box {
+            width: 92%; margin: 20px auto; background: var(--bg-glass);
+            border-radius: 20px; padding: 28px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px); 
+            border: var(--border-glow); 
+            transition: 0.3s;
+            position: relative;
+            overflow: hidden;
+            animation: bounceIn 0.7s ease-out;
+        }
+        #login-section::before,.white-card::before,.pay-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--blue), transparent);
+            opacity: 0;
+            transition: 0.3s;
+        }
+        #login-section:hover::before,.white-card:hover::before { opacity: 1; }
+        #login-section:hover,.white-card:hover { 
+            transform: translateY(-3px); 
+            border-color: var(--blue);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6), var(--shadow-neon);
+        }
+        
+        .cat-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem; color: var(--blue); margin: 30px 15px 18px; text-transform: uppercase;
+            font-weight: 700; letter-spacing: 2px; 
+            border-left: 4px solid var(--red); padding-left: 12px;
+            text-shadow: 0 0 10px var(--blue-glow);
+            position: relative;
+            animation: slideInLeft 0.5s ease-out;
+        }
+        @keyframes slideInLeft {
+            from { transform: translateX(-30px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .cat-title::after {
+            content: '';
+            position: absolute;
+            left: 0; bottom: -8px;
+            width: 60px; height: 2px;
+            background: linear-gradient(90deg, var(--red), transparent);
+        }
+        
+        .input-item { margin-bottom: 20px; }
+        .input-item label { 
+            display: block; font-size: 0.8rem; color: var(--blue); margin-bottom: 10px; 
+            font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            text-shadow: 0 0 5px var(--blue-glow);
+        }
+        .input-item input,.input-item textarea {
+            width: 100%; padding: 15px; border-radius: 12px;
+            border: 2px solid rgba(0,212,255,0.2); 
+            background: rgba(10,14,39,0.6);
+            color: var(--text); outline: none; 
+            font-family: 'Rajdhani', sans-serif; 
+            font-size: 1rem; font-weight: 600;
+            transition: 0.3s;
+        }
+        .input-item input:focus,.input-item textarea:focus {
+            border-color: var(--blue); 
+            background: rgba(10,14,39,0.9);
+            box-shadow: 0 0 0 4px var(--blue-glow), inset 0 0 20px rgba(0,212,255,0.1);
+            transform: scale(1.02);
+        }
+        
+        .white-card { 
+            display: flex; align-items: center; gap: 18px; position: relative; 
+            border-top: 3px solid transparent;
+            border-image: linear-gradient(90deg, var(--blue), var(--purple), var(--red)) 1;
+        }
+        .pdp-box { 
+            width: 70px; height: 70px; border-radius: 50%; overflow: hidden; 
+            background: linear-gradient(135deg, var(--blue), var(--purple), var(--red)); 
+            padding: 3px;
+            box-shadow: 0 0 20px var(--blue-glow);
+            animation: pulseGlow 2s infinite;
+        }
+        .pdp-box img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; background: var(--bg-dark); }
+        .logout-link { 
+            position: absolute; right: 20px; top: 20px; 
+            color: var(--red); font-size: 0.75rem; font-weight: 700; 
+            text-decoration: none; padding: 8px 14px; 
+            background: rgba(255,8,68,0.1); 
+            border-radius: 8px; transition: 0.3s;
+            border: 1px solid rgba(255,8,68,0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .logout-link:hover { 
+            background: var(--red); color: #fff; 
+            box-shadow: var(--shadow-red);
+            transform: scale(1.05) translateY(-2px);
+        }
+        
+        .grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 0 15px; margin-bottom: 20px; }
+        .offer-card {
+            background: linear-gradient(135deg, rgba(20,27,61,0.9), rgba(10,14,39,0.9)); 
+            border-radius: 18px; padding: 20px 12px;
+            text-align: center; border: 1px solid rgba(0,212,255,0.2); position: relative;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4); 
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            animation: bounceIn 0.6s ease-out backwards;
+        }
+        .offer-card:nth-child(1) { animation-delay: 0.1s; }
+        .offer-card:nth-child(2) { animation-delay: 0.2s; }
+        .offer-card:nth-child(3) { animation-delay: 0.3s; }
+        .offer-card:nth-child(4) { animation-delay: 0.4s; }
+        .offer-card::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(0,212,255,0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: 0.4s;
+        }
+        .offer-card:active { transform: scale(0.95); }
+        .offer-card:hover { 
+            transform: translateY(-8px) scale(1.03); 
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6), var(--shadow-neon); 
+            border-color: var(--blue);
+        }
+        .offer-card:hover::before { opacity: 1; }
+        .offer-card img { 
+            width: 65px; margin-bottom: 12px; border-radius: 12px; transition: 0.3s;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+        }
+        .offer-card:hover img { 
+            transform: scale(1.15) rotate(5deg); 
+            animation: wiggle 0.5s ease-in-out;
+        }
+        .price-box {
+            background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+            padding: 12px; border-radius: 10px; font-weight: 700; font-size: 1rem; color: #fff;
+            margin-top: 12px; 
+            box-shadow: 0 4px 15px var(--blue-glow), inset 0 1px 0 rgba(255,255,255,0.2);
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: 0.3s;
+        }
+        .offer-card:hover .price-box {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px var(--blue-glow), inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        .bonus-tag {
+            position: absolute; top: 10px; right: 12px;
+            background: linear-gradient(135deg, var(--red), #ff4081);
+            color: #fff; font-weight: 800; font-size: 0.7rem;
+            padding: 5px 10px; border-radius: 8px;
+            box-shadow: 0 3px 12px var(--red-glow);
+            font-family: 'Orbitron', sans-serif;
+            animation: pulseGlow 2s infinite, float 2s ease-in-out infinite;
+        }
+        
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10,14,39,0.85); z-index: 2000; justify-content: center; align-items: center;
+            backdrop-filter: blur(12px);
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            background: linear-gradient(135deg, var(--bg-card), #0f1430); 
+            width: 90%; max-width: 420px; border-radius: 24px;
+            overflow: hidden; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8), var(--shadow-neon);
+            animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid var(--blue);
+        }
+        @keyframes slideUp { from { transform: translateY(80px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        .modal-header {
+            background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+            color: #fff; padding: 24px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 20px var(--blue-glow);
+        }
+        .modal-header h3 { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem; font-weight: 900; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .modal-close { 
+            font-size: 1.8rem; cursor: pointer; transition: 0.3s;
+            display: inline-block;
+        }
+        .modal-close:hover { transform: rotate(90deg) scale(1.2); color: var(--red); }
+        .modal-body { padding: 25px; }
+        .info-card { 
+            background: rgba(10,14,39,0.6); 
+            border-radius: 16px; padding: 20px; margin-bottom: 18px; 
+            border: 1px solid rgba(0,212,255,0.2);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .info-row { display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 0.95rem; }
+        .info-row:last-child { margin-bottom: 0; }
+        .info-label { color: var(--text-dim); font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
+        .info-value { font-weight: 700; color: var(--text); }
+        .info-value.blue { color: var(--blue); text-shadow: 0 0 8px var(--blue-glow); }
+        .total-box { 
+            text-align: center; margin: 25px 0; padding: 24px; 
+            background: linear-gradient(135deg, rgba(255,8,68,0.1), rgba(0,212,255,0.1)); 
+            border-radius: 18px;
+            border: 1px solid rgba(0,212,255,0.3);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+            animation: pulseGlow 3s infinite;
+        }
+        .total-label { 
+            font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; 
+            font-weight: 700; letter-spacing: 2px; 
+        }
+        .total-price { 
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem; font-weight: 900; 
+            background: linear-gradient(135deg, var(--red), var(--blue), var(--purple)); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            text-shadow: 0 0 30px var(--blue-glow);
+            margin-top: 8px;
+        }
+        .modal-footer { display: flex; gap: 12px; padding: 0 25px 25px; }
+        .btn-cancel,.btn-confirm {
+            flex: 1; padding: 16px; border: none; border-radius: 14px; font-weight: 700;
+            font-size: 0.95rem; cursor: pointer; transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-cancel { 
+            background: rgba(139,146,185,0.2); 
+            color: var(--text-dim);
+            border: 1px solid rgba(139,146,185,0.3);
+        }
+        .btn-cancel:hover { 
+            background: rgba(139,146,185,0.3); 
+            transform: translateY(-2px);
+        }
+        .btn-cancel:active { transform: scale(0.95); }
+        .btn-confirm { 
+            background: linear-gradient(135deg, var(--green), #00d4aa); 
+            color: #0a0e27; 
+            box-shadow: 0 6px 20px var(--green-glow);
+            font-weight: 900;
+        }
+        .btn-confirm::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 0; height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        .btn-confirm:hover { 
+            transform: translateY(-3px); 
+            box-shadow: 0 8px 30px var(--green-glow);
+            animation: wiggle 0.3s ease-in-out;
+        }
+        .btn-confirm:active::before {
+            width: 300px; height: 300px;
+        }
+        
+        .pay-name { 
+            text-align: center; color: var(--green); font-size: 1.3rem; font-weight: 900; 
+            margin-bottom: 20px; letter-spacing: 2px;
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 15px var(--green-glow);
+            animation: pulseGlow 2s infinite;
+        }
+        .pay-card { 
+            background: linear-gradient(135deg, rgba(0,255,136,0.05), rgba(0,212,255,0.05)); 
+            border: 2px solid var(--green-glow); 
+            border-radius: 18px; padding: 22px; margin-bottom: 25px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .pay-row { display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 1rem; }
+        .pay-row:last-child { margin-bottom: 0; }
+        .pay-label { color: var(--text-dim); font-weight: 600; text-transform: uppercase; font-size: 0.8rem; }
+        .pay-value { font-weight: 800; color: var(--text); font-size: 1.2rem; font-family: 'Orbitron', sans-serif; }
+        .pay-value.green { color: var(--green); text-shadow: 0 0 10px var(--green-glow); }
+        
+        .btn-ussd {
+            display: block; 
+            background: linear-gradient(135deg, var(--green), #00d4aa);
+            color: #0a0e27; text-decoration: none; text-align: center; padding: 20px;
+            border-radius: 16px; font-weight: 900; margin: 20px 0; font-size: 1.1rem;
+            box-shadow: 0 8px 25px var(--green-glow); transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            animation: pulseGlow 2s infinite;
+        }
+        .btn-ussd::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine {
+            0% { left: -50%; }
+            100% { left: 150%; }
+        }
+        .btn-ussd:hover { 
+            transform: translateY(-4px) scale(1.02); 
+            box-shadow: 0 12px 35px var(--green-glow);
+            border-color: var(--green);
+        }
+        .btn-ussd:active { transform: scale(0.98); }
+        .btn-ussd i { margin-right: 12px; animation: float 2s ease-in-out infinite; }
+        
+        .num-copy {
+            background: rgba(10,14,39,0.6); 
+            border: 2px solid rgba(0,212,255,0.3);
+            border-radius: 16px; padding: 18px 22px; display: flex; justify-content: space-between;
+            align-items: center; font-size: 1.3rem; font-weight: 800; letter-spacing: 3px;
+            margin-bottom: 25px; 
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+            font-family: 'Orbitron', sans-serif;
+            transition: 0.3s;
+        }
+        .num-copy:hover {
+            border-color: var(--blue);
+            box-shadow: 0 0 20px var(--blue-glow), inset 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .copy-icon { 
+            color: var(--green); font-size: 1.6rem; cursor: pointer; transition: 0.3s;
+            filter: drop-shadow(0 0 8px var(--green-glow));
+            display: inline-block;
+        }
+        .copy-icon:active { transform: scale(1.3) rotate(180deg); }
+        .copy-icon:hover { color: #fff; animation: wiggle 0.5s ease-in-out; }
+        
+        .section-label { 
+            font-size: 0.75rem; color: var(--blue); text-transform: uppercase; 
+            font-weight: 800; margin: 25px 0 14px; letter-spacing: 2px;
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 8px var(--blue-glow);
+        }
+        
+        .btn-blue {
+            width: 100%; padding: 20px;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            color: white; border: none; border-radius: 16px;
+            font-weight: 900; font-size: 1.1rem; cursor: pointer;
+            margin-top: 20px; 
+            box-shadow: 0 8px 25px var(--blue-glow);
+            transition: 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-blue::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        .btn-blue:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 12px 35px var(--blue-glow);
+            animation: wiggle 0.3s ease-in-out;
+        }
+        .btn-blue:hover::before { left: 100%; }
+        .btn-blue:active { transform: scale(0.98); }
+        
+        #hist-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10,14,39,0.9); z-index: 2000; padding: 20px; overflow-y: auto;
+            backdrop-filter: blur(12px);
+        }
+        .hist-content { 
+            background: linear-gradient(135deg, var(--bg-card), #0f1430); 
+            border-radius: 24px; padding: 28px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8), var(--shadow-neon);
+            border: 1px solid var(--blue);
+            animation: slideUp 0.5s ease-out;
+        }
+        .hist-item {
+            background: linear-gradient(135deg, rgba(20,27,61,0.8), rgba(10,14,39,0.8));
+            padding: 20px; border-radius: 16px; margin-bottom: 14px;
+            border-left: 4px solid var(--red); font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: 0.3s;
+            border: 1px solid rgba(255,8,68,0.2);
+            animation: slideInLeft 0.5s ease-out backwards;
+        }
+        .hist-item:nth-child(1) { animation-delay: 0.1s; }
+        .hist-item:nth-child(2) { animation-delay: 0.2s; }
+        .hist-item:nth-child(3) { animation-delay: 0.3s; }
+        .hist-item:hover { 
+            transform: translateX(8px) scale(1.02); 
+            border-color: var(--red);
+            box-shadow: 0 6px 25px rgba(0,0,0,0.6), var(--shadow-red);
+        }
+        .no-data { 
+            text-align: center; color: var(--text-dim); padding: 60px 20px; font-size: 1rem;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="notification-box">Message ici</div>
+
+    <header>
+        <div style="display:flex; align-items:center; gap:12px;">
+            <img src="ff.jpg" class="logo-img">
+            <div class="site-title">IZY FAST</div>
+        </div>
+        <i class="fa-solid fa-clock-rotate-left hist-btn" onclick="toggleHist()"></i>
+    </header>
+
+    <div id="page-shop" class="page active">
+        <div class="banner-gif">
+            <img src="https://i.supaimg.com/e4e531d5-c9b8-4b02-a509-7ba192b7fed8/6f150d43-9bb4-461d-a967-cc8d507091d4.gif" alt="Free Fire">
+        </div>
+
+        <div id="login-section">
+            <div class="cat-title" style="margin-left:0; margin-top:0;">IDENTIFIANTS DU JEU</div>
+            <div class="input-item">
+                <label>Player ID</label>
+                <input type="number" id="uid-field" placeholder="Entrez l'ID Free Fire" oninput="checkAccount()">
+            </div>
+            <div class="input-item">
+                <label>Pseudo</label>
+                <input type="text" id="pseudo-field" placeholder="Pseudo en jeu" oninput="checkAccount()">
+            </div>
+        </div>
+
+        <div id="account-display" style="display:none;">
+            <div class="white-card">
+                <a href="javascript:location.reload()" class="logout-link">QUITTER</a>
+                <div class="pdp-box"><img src="ff.jpg"></div>
+                <div>
+                    <b id="disp-pseudo" style="font-size: 1.2rem; color: var(--blue);">---</b>
+                    <p style="font-size:0.85rem; color: #666; margin-top: 4px;">ID: <span id="disp-uid">---</span></p>
+                </div>
+            </div>
+            <div id="products-container"></div>
+        </div>
+    </div>
+
+    <div id="page-payment" class="page">
+        <div class="pay-box">
+            <div class="pay-name">NOM: <span id="pay-nom">---</span></div>
+            <div class="pay-card">
+                <div class="pay-row">
+                    <span class="pay-label">Montant à payer :</span>
+                    <span class="pay-value" id="pay-amt">0 AR</span>
+                </div>
+                                <hr style="border: none; border-top: 1px solid rgba(0,184,148,0.3); margin: 14px 0;">
+                <div class="pay-row">
+                    <span class="pay-label">Via :</span>
+                    <span class="pay-value green" id="pay-method">---</span>
+                </div>
+            </div>
+            <div class="section-label">1. ENVOYER LE PAIEMENT :</div>
+            <a href="#" class="btn-ussd" id="dial-link"><i class="fa-solid fa-bolt"></i> Envoyer (USSD)</a>
+            <div class="num-copy">
+                <span id="pay-num">---</span>
+                <i class="fa-regular fa-copy copy-icon" onclick="copyNum()"></i>
+            </div>
+            <div class="section-label">Numéro de l'envoyeur</div>
+            <div class="input-item">
+                <input type="tel" id="sender-num" placeholder="034 XX XXX XX">
+            </div>
+            <div class="section-label">2. RÉFÉRENCE DE TRANSACTION :</div>
+            <div class="input-item">
+                <textarea id="ref-field" placeholder="Ex : Ref: 5443017XX"></textarea>
+            </div>
+            <button class="btn-blue" onclick="confirmPayment()"><i class="fa-regular fa-circle-check"></i> Confirmer le Paiement</button>
+        </div>
+    </div>
+
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-shield-halved"></i> Confirmer</h3>
+                <span class="modal-close" onclick="closeModal()">×</span>
+            </div>
+            <div class="modal-body">
+                <div class="info-card">
+                    <div class="info-row"><span class="info-label">ID Joueur</span><span class="info-value" id="modal-uid">---</span></div>
+                    <div class="info-row"><span class="info-label">Pseudo</span><span class="info-value blue" id="modal-pseudo">---</span></div>
+                    <div class="info-row"><span class="info-label">Pack</span><span class="info-value" id="modal-pack">---</span></div>
+                    <div class="info-row"><span class="info-label">Paiement</span><span class="info-value" id="modal-pay">---</span></div>
+                </div>
+                <div class="total-box">
+                    <div class="total-label">TOTAL À PAYER</div>
+                    <div class="total-price" id="modal-price">0 AR</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+                <button class="btn-confirm" onclick="goToPaymentPage()">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="hist-modal">
+        <div class="hist-content">
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 22px;">
+                <h3 style="color: var(--blue); font-size: 1.3rem; font-family: 'Orbitron', sans-serif; text-shadow: 0 0 10px var(--blue-glow);">HISTORIQUE</h3>
+                <i class="fa-solid fa-xmark" style="font-size: 1.6rem; color: var(--red); cursor: pointer; transition: 0.3s;" onclick="toggleHist()" onmouseover="this.style.transform='rotate(90deg) scale(1.2)'" onmouseout="this.style.transform='rotate(0) scale(1)'"></i>
+            </div>
+            <div id="hist-list"><p style="text-align:center; color: #999; padding: 30px 0;">Chargement...</p></div>
+        </div>
+    </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getFirestore, collection, getDocs, addDoc, query, where, Timestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD58QKg5iDhFM1fNjJTzHQF3s-JiSX_WfI",
+  authDomain: "izyf-b5ce6.firebaseapp.com",
+  projectId: "izyf-b5ce6",
+  storageBucket: "izyf-b5ce6.firebasestorage.app",
+  messagingSenderId: "39456669535",
+  appId: "1:39456669535:web:f2bdf6985d4ca0e37d40ea"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let finalUID="", finalPseudo="", selectedOffer="", selectedPrice="", rawPrice=0, method="", receiverName="", receiverNum="", ussdCode="";
+let allTarifs=[], allCategories=[], allPayments=[];
+
+function notify(msg) {
+    const box = document.getElementById('notification-box');
+    box.innerText = msg;
+    box.style.top = "20px";
+    box.style.animation = "bounceIn 0.5s ease-out";
+    setTimeout(() => { 
+        box.style.top = "-100px"; 
+        box.style.animation = "";
+    }, 3000);
+}
+
+window.checkAccount = function() {
+    finalUID = document.getElementById('uid-field').value;
+    finalPseudo = document.getElementById('pseudo-field').value;
+    if(finalUID && finalPseudo) {
+        document.getElementById('disp-uid').innerText = finalUID;
+        document.getElementById('disp-pseudo').innerText = finalPseudo;
+        document.getElementById('account-display').style.display = "block";
+        document.getElementById('account-display').style.animation = "bounceIn 0.6s ease-out";
+    } else {
+        document.getElementById('account-display').style.display = "none";
+    }
+}
+
+async function initData(){
+    const catSnap = await getDocs(collection(db, "categories"));
+    allCategories = catSnap.docs.map(d => ({id: d.id, ...d.data()}));
+    
+    const tarifSnap = await getDocs(collection(db, "tarifs"));
+    allTarifs = tarifSnap.docs.map(d => ({id: d.id, ...d.data()}));
+    
+    const paySnap = await getDocs(collection(db, "payments"));
+    allPayments = paySnap.docs.map(d => ({id: d.id, ...d.data()}));
+
+    renderProducts();
+}
+
+function renderProducts(){
+    const container = document.getElementById('products-container');
+    if(allCategories.length === 0){
+        container.innerHTML = '<div class="no-data">Aucune catégorie disponible<br>Contacte l\'admin</div>';
+        return;
+    }
+    let html = '';
+    allCategories.forEach(cat => {
+        const catTarifs = allTarifs.filter(t => t.cat == cat.id);
+        if(catTarifs.length === 0) return;
+        html += `<div class="cat-title">${cat.name.toUpperCase()}</div>`;
+        html += `<div class="grid-container">`;
+        catTarifs.forEach(t => {
+            const priceNum = parseInt(t.price.replace(/\D/g,''));
+            html += `<div class="offer-card" onclick="selectOffer('${t.name}', '${t.price}', ${priceNum})">
+                ${t.bonus? `<span class="bonus-tag">${t.bonus}</span>` : ''}
+                <img src="${t.image || 'https://i.supaimg.com/e6e20408-8b9f-4e9b-9fad-5a7d7829f287/fcf5ec03-e53e-4588-b078-ce4908e9d843.png'}">
+                <div style="font-size:0.85rem; font-weight: 700;">${t.name}</div>
+                <div class="price-box">${t.price}</div>
+            </div>`;
+        });
+        html += `</div>`;
+    });
+    if(html === '') html = '<div class="no-data">Aucun article disponible</div>';
+    container.innerHTML = html;
+    
+    document.querySelectorAll('.offer-card').forEach(card => {
+        card.addEventListener('click', function() {
+            this.style.animation = 'wiggle 0.3s ease-in-out';
+            setTimeout(() => { this.style.animation = ''; }, 300);
+        });
+    });
+}
+
+window.selectOffer = function(name, price, raw) {
+    selectedOffer = name; selectedPrice = price; rawPrice = raw;
+    showPaymentChoice();
+}
+
+function showPaymentChoice() {
+    const accDisplay = document.getElementById('account-display');
+    let payChoice = document.getElementById('pay-choice');
+    if(payChoice) payChoice.remove();
+    payChoice = document.createElement('div');
+    payChoice.id = 'pay-choice';
+    payChoice.style.animation = 'slideUp 0.5s ease-out';
+    let paymentsHTML = '<div class="cat-title">CHOISIR MODE DE PAIEMENT</div><div class="grid-container">';
+    allPayments.forEach(p => {
+        paymentsHTML += `<div class="offer-card" onclick="setMethod('${p.name}', '${p.number}', '${p.name}', '${p.ussd}')">
+            <img src="${p.image}" style="border-radius: 50%; width: 55px; border: 3px solid var(--green);">
+            <div style="font-weight: 800; font-size: 0.95rem; color: var(--blue);">${p.name.toUpperCase()}</div>
+        </div>`;
+    });
+    paymentsHTML += '</div>';
+    payChoice.innerHTML = paymentsHTML;
+    accDisplay.appendChild(payChoice);
+    payChoice.scrollIntoView({behavior:'smooth'});
+}
+
+window.setMethod = function(name, num, receiver, ussd) {
+    method = name;
+    receiverName = receiver;
+    receiverNum = num;
+    ussdCode = ussd + rawPrice + encodeURIComponent('#');
+    openModal();
+}
+
+function openModal() {
+    document.getElementById('modal-uid').innerText = finalUID;
+    document.getElementById('modal-pseudo').innerText = finalPseudo;
+    document.getElementById('modal-pack').innerText = selectedOffer;
+    document.getElementById('modal-pay').innerText = method + ' - ' + receiverName;
+    document.getElementById('modal-price').innerText = selectedPrice;
+    document.getElementById('confirm-modal').classList.add('active');
+}
+
+window.closeModal = function() {
+    document.getElementById('confirm-modal').classList.remove('active');
+}
+
+window.goToPaymentPage = function() {
+    closeModal();
+    document.getElementById('pay-nom').innerText = receiverName.toUpperCase();
+    document.getElementById('pay-amt').innerText = selectedPrice;
+    document.getElementById('pay-method').innerText = method;
+    document.getElementById('pay-num').innerText = receiverNum;
+    document.getElementById('dial-link').href = "tel:" + ussdCode;
+    document.getElementById('page-shop').classList.remove('active');
+    document.getElementById('page-payment').classList.add('active');
+    window.scrollTo(0,0);
+}
+
+window.copyNum = function() {
+    navigator.clipboard.writeText(receiverNum.replace(/\s/g, ''));
+    notify("Numéro copié!");
+    event.target.style.animation = 'wiggle 0.5s ease-in-out';
+    setTimeout(() => { event.target.style.animation = ''; }, 500);
+}
+
+window.confirmPayment = async function() {
+    const sender = document.getElementById('sender-num').value;
+    const ref = document.getElementById('ref-field').value;
+    if(!sender) return notify("Veuillez entrer le numéro de l'envoyeur!");
+    if(!ref) return notify("Veuillez entrer la référence de transaction!");
+    
+    event.target.style.animation = 'pulseGlow 0.5s ease-in-out';
+    event.target.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Traitement...';
+    
+    try {
+        await addDoc(collection(db, "orders"), {
+            date: Timestamp.now(),
+            item: selectedOffer,
+            price: selectedPrice,
+            status: 'En attente',
+            uid: finalUID,
+            pseudo: finalPseudo,
+            method: method,
+            receiver: receiverName,
+            sender: sender,
+            ref: ref
+        });
+        notify("Paiement confirmé! En attente de vérification.");
+        
+        document.getElementById('page-payment').classList.remove('active');
+        document.getElementById('page-shop').classList.add('active');
+        document.getElementById('sender-num').value = '';
+        document.getElementById('ref-field').value = '';
+        let payChoice = document.getElementById('pay-choice');
+        if(payChoice) payChoice.remove();
+        window.scrollTo(0,0);
+        
+    } catch(e) {
+        notify("Erreur: " + e.message);
+    } finally {
+        event.target.innerHTML = '<i class="fa-regular fa-circle-check"></i> Confirmer le Paiement';
+        event.target.style.animation = '';
+    }
+}
+
+window.toggleHist = async function() {
+    const modal = document.getElementById('hist-modal');
+    modal.style.display = (modal.style.display === "block")? "none" : "block";
+    if(modal.style.display === "block") await renderHistory();
+}
+
+async function renderHistory() {
+    const list = document.getElementById('hist-list');
+    if(!finalUID) {
+        list.innerHTML = '<p style="text-align:center; color: #999; padding: 30px 0;">Entre ton UID d\'abord</p>';
+        return;
+    }
+    try {
+        list.innerHTML = '<p style="text-align:center; color: #999; padding: 30px 0;"><i class="fa-solid fa-spinner fa-spin"></i> Chargement...</p>';
+        const q = query(collection(db, "orders"), where("uid", "==", finalUID));
+        const snap = await getDocs(q);
+        let orders = snap.docs.map(d => ({id: d.id, ...d.data()}));
+        
+        orders.sort((a,b) => {
+            const dateA = a.date?.toDate ? a.date.toDate() : new Date(0);
+            const dateB = b.date?.toDate ? b.date.toDate() : new Date(0);
+            return dateB - dateA;
+        });
+        
+        if(orders.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color: #999; padding: 30px 0;">Aucune commande trouvée.</p>';
+            return;
+        }
+        list.innerHTML = orders.map(o => {
+            const dateStr = o.date?.toDate ? o.date.toDate().toLocaleString('fr-FR') : 'Date inconnue';
+            const statusColor = o.status === 'En attente' ? 'var(--blue)' : o.status === 'Confirmé' ? 'var(--green)' : 'var(--red)';
+            return `<div class="hist-item">
+                <div style="color:var(--blue); font-weight:700; display:flex; justify-content:space-between; font-size:0.95rem;">
+                    <span>${o.item}</span>
+                    <span style="color:${statusColor}; text-shadow: 0 0 8px ${statusColor}66;">${o.status}</span>
+                </div>
+                <div style="font-size:0.8rem; margin: 6px 0;">UID: <b>${o.uid}</b> | ${o.pseudo}</div>
+                <div style="font-size:0.75rem; color:var(--text-dim);">${o.method} - Envoyeur: ${o.sender}</div>
+                <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:0.8rem; border-top:1px solid rgba(0,212,255,0.2); padding-top:10px;">
+                    <span>${dateStr}</span>
+                    <b style="color: var(--red); font-family: 'Orbitron', sans-serif;">${o.price}</b>
+                </div>
+            </div>`;
+        }).join('');
+    } catch(e) {
+        list.innerHTML = '<p style="text-align:center; color: #ff2e63; padding: 30px 0;">Erreur: ' + e.message + '</p>';
+    }
+}
+
+initData();
+</script>
+</body>
+</html>
+
